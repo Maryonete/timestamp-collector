@@ -44,6 +44,12 @@ Lors de la réception de ce signal, il affiche un message et exécute une foncti
 Cette fonction configure le gestionnaire pour le signal SIGINT. Lorsque ce signal est reçu, elle affiche
 "Arrêt en cours..." et exécute la fonction de nettoyage (si elle est définie) avant d'arrêter le programme.
 
+=head1 AUTHOR
 
+Ton Nom, <ton.email@example.com>
+
+=head1 LICENSE
+
+Ce module est libre de droits sous la licence Perl.
 
 =cut

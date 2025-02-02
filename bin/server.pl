@@ -4,15 +4,12 @@ use strict;
 use warnings;
 
 use FindBin;
-use lib "$FindBin::Bin/../lib";
-
+use lib "$FindBin::Bin/../lib", 'lib';
 use Getopt::Long;
-use Timestamp::Server;
 
-use lib 'lib';
 use AppConfig;
 use SignalHandler;
-
+use Timestamp::Server;
 use Timestamp::OptionsHandler;
 
 
@@ -35,4 +32,34 @@ my $cleanup = sub {
 };
 main();
 setup_signal_handlers($cleanup);
-setup_signal_handlers();
+
+1;
+
+=pod
+=head1 NAME
+
+server.pl - Lance un serveur d'écoute des timestamps
+
+=head1 SYNOPSIS
+
+  use Timestamp::Server;
+
+  perl server.pl
+
+=head1 DESCRIPTION
+
+Ce script lance un serveur qui écoute sur un port défini dans la configuration. 
+Les options sont validées avant de démarrer le serveur.
+
+=head1 OPTIONS
+
+=over 8
+
+=item B<--port>
+
+Port sur lequel le serveur ecoute le client
+
+
+=back
+
+=cut

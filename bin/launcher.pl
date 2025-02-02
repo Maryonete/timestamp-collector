@@ -36,7 +36,6 @@ sub start_server {
         # Démarrage du serveur via le script
         system("perl $server_script --port=$opts{port}") 
             or die "Impossible de lancer serveur.pl : $!\n";
-            print "END SERVEUR";
         exit 0;
     }
     return $pid_serveur;
@@ -47,36 +46,30 @@ sub start_clients {
     my ($nb_clients, $port, $host, $interval) = @_;
 
     my @pid_clients = ();
+
     foreach (1..$nb_clients) {
+
         my $pid_client = fork();
+        
         if ($pid_client == 0) {
-            while (1) {
+            # Gestionnaire de signal pour le client
+            $SIG{TERM} = sub {
+                print "Client $$ terminé\n";
+                exit 0;
+            };
             # Démarrage du client via le script
             system("perl $client_script --host=$opts{host} --port=$opts{port} --interval=$opts{interval}") 
-            or warn "Client termine, redémarrage...\n";
-            sleep 1; # Attendre avant de redémarrer
-            }
+                or die "Client connexion terminee\n";
+            exit 0;
         }
-        push(@pid_clients, $pid_client);
+        push(@pid_clients, $pid_client) if $pid_client;
     }
     return @pid_clients;
 }
 
-
-
-
-# Attente des processus enfants
-sub wait_for_children {
-    while (1) {
-        sleep 1;
-        # Vérifier les processus enfants terminés
-        while ((my $pid = waitpid(-1, WNOHANG)) > 0) {
-            print "Processus $pid terminé\n";
-        }
-    }
-}
-
-# Main execution flow
+# Main
+print '_' x 50 . "\n";
+print "Communication TCP/IP Client(s)/Serveur";
 print "\nDemarrage avec la configuration suivante:\n";
 print "- Serveur port: $opts{port}\n";
 print "- Clients connect: $opts{host}:$opts{port}\n";
@@ -89,17 +82,61 @@ my @pid_clients = start_clients($opts{nb_clients},$opts{port}, $opts{host}, $opt
 
 # Gestion de l'arrêt propre avec Ctrl+C 
 my $cleanup = sub {
-    kill 'TERM', $pid_serveur, @pid_clients;
-};
-# Wait for the child processes to terminate
-wait_for_children();
+    print "\nArrêt des processus...\n";
+    
+    # Terminer tous les processus du groupe
+    kill 'TERM', -$$;  # Envoie TERM à tout le groupe de processus
+    
+    # Attendre la fin de tous les processus
+    while (waitpid(-1, 0) > 0) {}
+    
+    print "Tous les processus sont arrêtés\n";
 
-# Activer le gestionnaire avec le cleanup
+};
+
+# Active le gestionnaire avec le cleanup : signal (Ctrl+C)
 setup_signal_handlers($cleanup);
 
-# Handle termination signal (Ctrl+C)
-handle_termination($pid_serveur, @pid_clients);
 
 
 
+1;
+=pod
+=head1 NAME
 
+launcher.pl - Lance un serveur d'écoute des timestamps et n clients
+
+=head1 SYNOPSIS
+
+  use Timestamp::Server;
+
+  perl server.pl
+
+=head1 DESCRIPTION
+
+Ce script lance un serveur et n clients 
+Les options sont validées avant de démarrer le serveur et le clients.
+
+=head1 OPTIONS
+
+=over 8
+
+=item B<--interval>
+
+Specifie l'interval de temps en ms entre chaque envoie de donnee du client au serveur
+
+=item B<--port>
+
+Port sur lequel le serveur ecoute le client
+
+=item B<--host>
+
+Adresse IP du serveur
+
+=item B<--clients>
+
+Nombre de clients a lancer
+
+=back
+
+=cut

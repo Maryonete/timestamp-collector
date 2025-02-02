@@ -84,8 +84,13 @@ sub init_datas_file {
     open(my $log_file, '<', $self->{output_file}) 
         or die "Impossible d'ouvrir le fichier [$self->{output_file}]: $!";
 
-    # Lire et stocker les données dans le tableau
-    $self->{datas_file} = [  <$log_file> ];
+    # Lire et nettoyer les données
+    $self->{datas_file} = [];
+    while (my $line = <$log_file>) {
+        chomp $line;
+        next unless $line =~ /\S/;  # Ignore les lignes vides
+        push @{$self->{datas_file}}, $line;
+    }
     close($log_file);
 }
 sub process_data {
@@ -100,8 +105,8 @@ sub process_data {
         
         open(my $log_file, '>', $self->{output_file}) 
             or die "Impossible d'ouvrir le fichier [$self->{output_file}]: $!";
-            
-        print $log_file join("\n", @sorted_timestamps) . "\n";
+        
+        print $log_file join("\n", @sorted_timestamps); # . "\n";
         close($log_file);
     }
 }
@@ -118,7 +123,6 @@ sub run {
     while(1) {
         if ($self->{connexion} && $self->{connexion}->connected()) {
             my $message = $self->handle_client_connection();
-            # warn "Server Connexion en cours ... ";
             next unless $message;
             next unless Timestamp::Util::validate_timestamp($message);
             $self->process_data($message);

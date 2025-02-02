@@ -22,7 +22,7 @@ sub is_number{
 
 sub validate_port {
     my ($port) = @_;
-    
+    # print "\nvalidate_port [$port]\n";
     # Vérifie que le port est un nombre
     return 0 unless defined $port && is_number($port);
     
