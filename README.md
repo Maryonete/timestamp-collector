@@ -17,7 +17,6 @@ Ce projet implémente une communication client-serveur en Perl permettant la col
 - Modules Perl requis :
   - `IO::Socket::INET`
   - `Time::HiRes`
-  - `Config::Tiny`
   - `Test::More`
 
 ### Installation des Dépendances
@@ -25,7 +24,7 @@ Ce projet implémente une communication client-serveur en Perl permettant la col
 Les modules Perl nécessaires peuvent être installés avec la commande suivante :
 
 ```bash
-cpan install IO::Socket::INET Time::HiRes Config::Tiny Test::More
+cpan install IO::Socket::INET Time::HiRes Test::More
 ```
 
 ## Utilisation
@@ -101,6 +100,9 @@ Le fichier `config/config.ini` permet de personnaliser :
 
 - **Arrêt propre des clients et du serveur** :
   Implémenter une gestion correcte de la fermeture des connexions et de l'arrêt du programme éviterait de devoir utiliser `CTRL+C` et garantirait la libération des ressources.
+
+- **Sécurisation de la connexion** :
+  Utiliser IO::Socket::SSL au lieu de IO::Socket::INET
 
 ## Lien vers l'énoncé
 

@@ -55,20 +55,17 @@ sub calculate_time_offset {
    
     # Reçoit le timestamp du serveur
     my $server_timestamp = '';
-    $self->{connexion}->recv($server_timestamp, 1024);
+    my $bytes_read = $self->{connexion}->recv($server_timestamp, 1024);
     chomp($server_timestamp);
 
     # Timestamp du serveur invalide
-    if ($server_timestamp || !Timestamp::Util::validate_timestamp($server_timestamp)) {
+    if (!$server_timestamp || !Timestamp::Util::validate_timestamp($server_timestamp)) {
         $self->{time_offset} = 0;
         warn "Timestamp du serveur invalide : [$server_timestamp]";
         return 0;
     }
-    
-
     # Calcule et stocke l'offset
     $self->{time_offset} = sprintf("%.3f",  $server_timestamp - $client_timestamp);
-    
     return $self->{time_offset};
 }
 

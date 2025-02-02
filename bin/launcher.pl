@@ -6,7 +6,6 @@ use POSIX ":sys_wait_h";
 use Time::HiRes qw(sleep);
 use FindBin qw($RealBin);
 use lib 'lib';
-use AppConfig; 
 use SignalHandler;
 use Timestamp::OptionsHandler;
 

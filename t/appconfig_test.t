@@ -2,7 +2,6 @@ use strict;
 use warnings;
 use Test::More tests => 3;
 use lib './lib';
-use Config::Tiny;
 
 # Fonctions utilitaires pour les tests
 sub setup_test_env {
@@ -29,10 +28,10 @@ require_ok('AppConfig');
 
 # Test des valeurs valides
 subtest 'Lecture des valeurs valides' => sub {
-    my $value = eval { AppConfig::get('test', 'value') };
+    my $value = eval { AppConfig::get('value') };
     is($value, '123', 'Lecture de value') or diag($@);
 
-    my $name = eval { AppConfig::get('test', 'name') };
+    my $name = eval { AppConfig::get('name') };
     is($name, 'marion', 'Lecture de name') or diag($@);
 };
 
@@ -41,7 +40,7 @@ subtest 'Gestion des erreurs' => sub {
     eval { AppConfig::get('invalid', 'key') };
     like($@, qr/Section 'invalid' non trouvee/, 'Erreur section invalide');
 
-    eval { AppConfig::get('test', 'invalid') };
+    eval { AppConfig::get('invalid') };
     like($@, qr/Cle 'invalid' non trouvee/, 'Erreur clé invalide');
 };
 

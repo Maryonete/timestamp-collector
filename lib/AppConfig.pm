@@ -1,28 +1,32 @@
 package AppConfig;
+
 use strict;
 use warnings;
-use Config::Tiny;
 
 our $config;
 
 BEGIN {
     # Charge le fichier de configuration au demarrage
     my $config_file = 'config/config.ini';
-    $config = Config::Tiny->read($config_file)
-        or die "Impossible de lire le fichier de configuration: $config_file";
+    open(my $fh, '<', $config_file) 
+            or die "Impossible de lire le fichier de configuration [$config_file]: $!";
+
+    while( <$fh> ) {
+        chomp;
+        $config->{$1} = $2 if /^(\w+) = (\w+)$/;
+    }
+
+    close($fh);
 }
 
 sub get {
-    my ($section, $key) = @_;
-    
-    # Verifier si la section existe
-    die "Section '$section' non trouvee" unless exists $config->{$section};
+    my ($key) = @_;
     
     # Verifier si la cle existe dans la section
-    die "Cle '$key' non trouvee dans la section '$section'"
-        unless exists $config->{$section}->{$key};
+    die "Cle '$key' non trouvee"
+        unless exists $config->{$key};
     
-    return $config->{$section}->{$key};
+    return $config->{$key};
 }
 
 1;
@@ -37,18 +41,17 @@ AppConfig - Gestionnaire de configuration pour charger et recuperer des parametr
 
     use AppConfig;
 
-    my $value = AppConfig::get('section_name', 'key_name');
+    my $value = AppConfig::get('key_name');
 
 =head1 DESCRIPTION
 
-Le module AppConfig permet de charger et de recuperer des parametres de configuration a partir d'un fichier INI. Il utilise le module L<Config::Tiny> pour lire le fichier de configuration et fournit une methode simple pour acceder aux valeurs des sections et des cles.
+Le module AppConfig lit le fichier de configuration et fournit une methode simple pour acceder aux valeurs des cles.
 
 =head1 EXAMPLE
 
     use AppConfig;
 
-    my $server_host = AppConfig::get('server', 'host');
-    my $server_port = AppConfig::get('server', 'port');
+    my $server_host = AppConfig::get('host');
 
 =head1 METHODS
 
@@ -56,7 +59,7 @@ Le module AppConfig permet de charger et de recuperer des parametres de configur
 
 =item B<get($section, $key)>
 
-Recupere la valeur associee a la cle specifiee dans la section donnee du fichier de configuration. Leve une exception si la section ou la cle n'existe pas.
+Recupere la valeur associee a la cle specifiee donnee du fichier de configuration. Leve une exception si la cle n'existe pas.
 
 =back
 
@@ -66,9 +69,5 @@ Le fichier de configuration est un fichier INI situe dans le repertoire 'config'
 
     [section_name]
     key_name = value
-
-=head1 ERRORS
-
-Si le fichier de configuration ne peut pas être lu ou si une section ou une cle est introuvable, une erreur sera generee et le programme s'arrêtera.
 
 =cut

@@ -11,10 +11,10 @@ sub handle_options {
     
     # Récupère les options par défaut du fichier de configuration
     my %options = (
-        host       => AppConfig::get('settings', 'host'),
-        port       => AppConfig::get('settings', 'port'),
-        interval   => AppConfig::get('settings', 'interval'),
-        nb_clients => AppConfig::get('settings', 'nb_clients'),
+        host       => AppConfig::get('host'),
+        port       => AppConfig::get('port'),
+        interval   => AppConfig::get('interval'),
+        nb_clients => AppConfig::get('nb_clients'),
     );
 
     # Surcharge avec les options passées en paramètre

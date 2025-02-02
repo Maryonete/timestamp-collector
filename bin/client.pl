@@ -7,7 +7,6 @@ use Getopt::Long;
 use FindBin;
 use lib "$FindBin::Bin/../lib";
 use Timestamp::Client;
-use AppConfig;
 use SignalHandler;
 
 use Timestamp::OptionsHandler;
