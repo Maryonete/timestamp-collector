@@ -10,31 +10,18 @@ use SignalHandler;
 use Timestamp::OptionsHandler;
 
 
-# Récupère et valide les options
-my %opts = Timestamp::OptionsHandler::handle_options('launcher');
 
-# Chemins des scripts
-my $server_script = "$RealBin/server.pl";
-my $client_script = "$RealBin/client.pl";
-
-# Vérifier que les scripts existent
-unless (-e $server_script) {
-    die "Le script serveur [$server_script] n'existe pas.\n";
-}
-unless (-e $client_script) {
-    die "Le script client [$client_script] n'existe pas.\n";
-}
 
 # Serveur
 sub start_server {
-     my ($port) = @_;
+     my ($server_script, $options) = @_;
     my $pid_serveur = fork();
     if (!defined $pid_serveur) {
         die "Impossible de forker : $!\n";
     } 
     elsif ($pid_serveur == 0) {
         # Démarrage du serveur via le script
-        system("perl $server_script --port=$opts{port}") 
+        system("perl $server_script --port=$options->{port}") 
             or die "Impossible de lancer serveur.pl : $!\n";
         exit 0;
     }
@@ -43,11 +30,11 @@ sub start_server {
 
 # Client
 sub start_clients {
-    my ($nb_clients, $port, $host, $interval) = @_;
+    my ($client_script, $options) = @_;
 
     my @pid_clients = ();
 
-    foreach (1..$nb_clients) {
+    foreach (1..$options->{nb_clients}) {
 
         my $pid_client = fork();
         
@@ -58,7 +45,7 @@ sub start_clients {
                 exit 0;
             };
             # Démarrage du client via le script
-            system("perl $client_script --host=$opts{host} --port=$opts{port} --interval=$opts{interval}") 
+            system("perl $client_script --host=$options->{host} --port=$options->{port} --interval=$options->{interval}") 
                 or die "Client connexion terminee\n";
             exit 0;
         }
@@ -66,22 +53,19 @@ sub start_clients {
     }
     return @pid_clients;
 }
-
-# Main
-print '_' x 50 . "\n";
-print "Communication TCP/IP Client(s)/Serveur";
-print "\nDemarrage avec la configuration suivante:\n";
-print "- Serveur port: $opts{port}\n";
-print "- Clients connect: $opts{host}:$opts{port}\n";
-print "- Nombre de clients: $opts{nb_clients}\n";
-print "- Intervalle: $opts{interval}  ms\n";
-print '_' x 50 . "\n";
-my $pid_serveur = start_server($opts{port});
-my @pid_clients = start_clients($opts{nb_clients},$opts{port}, $opts{host}, $opts{interval});
-
-
+# Affichage de la configuration
+sub display_config {
+    my ($options) = @_;
+    print "Communication TCP/IP Client(s)/Serveur\n";
+    print "Demarrage avec la configuration suivante:\n";
+    print "- Serveur port: $options->{port}\n";
+    print "- Clients connect: $options->{host}:$options->{port}\n";
+    print "- Nombre de clients: $options->{nb_clients}\n";
+    print "- Intervalle: $options->{interval} ms\n";
+    print '_' x 50 . "\n";
+}
 # Gestion de l'arrêt propre avec Ctrl+C 
-my $cleanup = sub {
+sub cleanup {
     print "\nArrêt des processus...\n";
     
     # Terminer tous les processus du groupe
@@ -91,17 +75,39 @@ my $cleanup = sub {
     while (waitpid(-1, 0) > 0) {}
     
     print "Tous les processus sont arrêtés\n";
-
 };
 
-# Active le gestionnaire avec le cleanup : signal (Ctrl+C)
-setup_signal_handlers($cleanup);
+sub main{
 
+    # Récupère et valide les options
+    my %options = Timestamp::OptionsHandler::handle_options('launcher');
 
+    # Chemins des scripts
+    my $server_script = "$RealBin/server.pl";
+    my $client_script = "$RealBin/client.pl";
 
+    # Vérifier que les scripts existent
+    unless (-e $server_script) {
+        die "Le script serveur [$server_script] n'existe pas.\n";
+    }
+    unless (-e $client_script) {
+        die "Le script client [$client_script] n'existe pas.\n";
+    }
 
+    display_config(\%options);
+    # setup_signal_handlers(\&cleanup);
+    my $pid_serveur = start_server($server_script, \%options)  ;
+    my @pid_clients = start_clients($client_script , \%options);
+    # Active le gestionnaire avec le cleanup : signal (Ctrl+C)
+
+}
+
+main();
 1;
+
+
 =pod
+
 =head1 NAME
 
 launcher.pl - Lance un serveur d'écoute des timestamps et n clients
@@ -109,8 +115,9 @@ launcher.pl - Lance un serveur d'écoute des timestamps et n clients
 =head1 SYNOPSIS
 
   use Timestamp::Server;
+  use Timestamp::Client;
 
-  perl server.pl
+  perl launcher.pl
 
 =head1 DESCRIPTION
 

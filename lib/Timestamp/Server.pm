@@ -6,6 +6,8 @@ use IO::Socket::INET;
 use Timestamp::Util;
 use Timestamp::OptionsHandler;
 
+
+
 sub new {
     my ($class, %options) = @_;
 
@@ -25,6 +27,9 @@ sub new {
     bless $self, $class;
     return $self;
 }
+
+
+
 sub create_server_socket {
     my ($self) = @_;
 
@@ -63,12 +68,12 @@ sub handle_time_sync {
 sub handle_client_connection {
     my ($self) = @_;
 
-        # Premiere connexion : synchronisation du temps
+    # Premiere connexion : synchronisation du temps
     my $client_message = '';
     my $bytes_read = $self->{connexion}->recv($client_message, 1024);
     
     if (!defined $bytes_read) {
-        warn "Erreur de lecture : $!";
+        die "Erreur de lecture : $!";
         return;
     }
     if ($client_message eq "SYNC") {
@@ -79,6 +84,13 @@ sub handle_client_connection {
 }
 sub init_datas_file {
     my ($self) = @_;
+
+    # Vérifier si le fichier existe, sinon le créer
+    unless (-e $self->{output_file}) {
+        open(my $fh, '>', $self->{output_file}) 
+            or die "Impossible de créer le fichier [$self->{output_file}]: $!";
+        close($fh);
+    }
 
     # Ouvrir en lecture pour charger les données dans la mémoire
     open(my $log_file, '<', $self->{output_file}) 

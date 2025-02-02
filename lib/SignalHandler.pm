@@ -6,15 +6,20 @@ use Exporter 'import';
 
 our @EXPORT = qw(setup_signal_handlers);
 
-
 sub setup_signal_handlers {
     my ($cleanup) = @_;
+
     $SIG{INT} = sub {
-        print "\nArrêt en cours...\n";
+       
         $cleanup->() if $cleanup;
-        exit;
+        
+        exit 0;
     };
+
+    # On peut ignorer BREAK sous Windows
+    $SIG{BREAK} = 'IGNORE';
 }
+
 
 1;
 
@@ -32,8 +37,8 @@ SignalHandler - Gestion des signaux pour un nettoyage propre
 
 =head1 DESCRIPTION
 
-Ce module permet de configurer un gestionnaire pour le signal SIGINT (généralement envoyé lors d'un Ctrl+C).
-Lors de la réception de ce signal, il affiche un message et exécute une fonction de nettoyage (si fournie).
+Ce module permet de configurer un gestionnaire pour le signal SIGINT (envoyé lors d'un Ctrl+C).
+Lors de la réception de ce signal, il affiche un message et exécute une fonction de nettoyage .
 
 =head1 FUNCTIONS
 

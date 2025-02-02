@@ -15,6 +15,9 @@ use Timestamp::OptionsHandler;
 
 # Fonction principale
 sub main {
+    
+    setup_signal_handlers(\&cleanup);
+
     # Récupère et valide les options
     my %opts = Timestamp::OptionsHandler::handle_options('server');
 
@@ -27,11 +30,13 @@ sub main {
 }
 
 # Gestion de l'arrêt propre avec Ctrl+C 
-my $cleanup = sub {
+sub cleanup {
+    print "Arret du processus Serveur [$$]\n";
     kill 'TERM', $$;
 };
+
 main();
-setup_signal_handlers($cleanup);
+
 
 1;
 

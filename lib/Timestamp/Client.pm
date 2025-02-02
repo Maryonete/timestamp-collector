@@ -1,9 +1,8 @@
 package Timestamp::Client;
 use strict;
 use warnings;
-use Time::HiRes qw(time);
+use Time::HiRes qw(time usleep);
 use IO::Socket::INET;
-use Time::HiRes qw(usleep);
 use Timestamp::Util;
 use Timestamp::OptionsHandler;
 
