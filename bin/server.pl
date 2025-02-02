@@ -11,6 +11,7 @@ use Timestamp::Server;
 
 use lib 'lib';
 use AppConfig;
+use SignalHandler;
 
 use Timestamp::OptionsHandler;
 
@@ -24,7 +25,14 @@ sub main {
     my $serveur = Timestamp::Server->new(
         port => $opts{port}
     );
+    print "Serveur demarre avec PID $$ (ecoute sur port: $opts{port})\n";
     $serveur->run();
 }
 
+# Gestion de l'arrêt propre avec Ctrl+C 
+my $cleanup = sub {
+    kill 'TERM', $$;
+};
 main();
+setup_signal_handlers($cleanup);
+setup_signal_handlers();

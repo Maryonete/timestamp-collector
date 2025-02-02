@@ -1,7 +1,6 @@
 package Timestamp::Client;
 use strict;
 use warnings;
-use Data::Dumper;
 use Time::HiRes qw(time);
 use IO::Socket::INET;
 use Time::HiRes qw(usleep);
@@ -17,10 +16,11 @@ sub new {
     }
 
     my $self = {
-        server_host => $options{host} || 'localhost',
-        server_port => $options{port} || '7777',
-        time_offset => 0,  # Stocke l'offset de temps
-        sync_interval => $options{interval} || 10,  # Intervalle en millisecondes
+        server_host     => $options{host} || 'localhost',
+        server_port     => $options{port} || '7777',
+        time_offset     => 0,  # Stocke l'offset de temps
+        sync_interval   => $options{interval} || 10,  # Intervalle en millisecondes
+        connexion      => undef,  # Stocke la connexion persistante
     };
     bless $self, $class;
     return $self;
@@ -28,38 +28,46 @@ sub new {
 
 sub connect_to_server {
     my ($self) = @_;
-    return (new IO::Socket::INET (
+
+    # la connexion existe déjà
+    return $self->{connexion} if $self->{connexion} && $self->{connexion}->connected();
+
+    $self->{connexion} = (new IO::Socket::INET (
         PeerHost => $self->{server_host},
         PeerPort => $self->{server_port},
         Proto    => 'tcp',
     )) || die "Client cannot connect to server: host:$self->{server_host} - port:$self->{server_port} $!\n";
+    # warn "Connexion etablie" if $self->{connexion};
+    return $self->{connexion};
 }
 
 sub calculate_time_offset {
     my ($self) = @_;
-    my $server_connection = $self->connect_to_server();
-    return unless $server_connection;
+
+    $self->connect_to_server();
+    return unless $self->{connexion};
            
     # Indique qu'il s'agit d'une synchronisation
-    $server_connection->print("SYNC\n");
+    $self->{connexion}->send("SYNC");
     
     # Envoie le timestamp local
-    my $client_timestamp = time();
+    my $client_timestamp = sprintf("%.3f", time());
    
     # Reçoit le timestamp du serveur
-    my $server_timestamp;
-    $server_connection->recv($server_timestamp, 1024);
-    
+    my $server_timestamp = '';
+    $self->{connexion}->recv($server_timestamp, 1024);
+    chomp($server_timestamp);
+
     # Timestamp du serveur invalide
-    if (!Timestamp::Util::validate_timestamp($server_timestamp)) {
+    if ($server_timestamp || !Timestamp::Util::validate_timestamp($server_timestamp)) {
         $self->{time_offset} = 0;
-        warn "Timestamp du serveur invalide : $server_timestamp [serveur = $client_timestamp]";
+        warn "Timestamp du serveur invalide : [$server_timestamp]";
         return 0;
     }
+    
 
     # Calcule et stocke l'offset
-    $self->{time_offset} = $server_timestamp - $client_timestamp;
-    $server_connection->close();
+    $self->{time_offset} = sprintf("%.3f",  $server_timestamp - $client_timestamp);
     
     return $self->{time_offset};
 }
@@ -69,17 +77,24 @@ sub run {
     $self->calculate_time_offset();
     
     while (1) {
-        my $synchronized_timestamp = time()+ $self->{time_offset};
-        if (my $server_connection = $self->connect_to_server()) {
-            $server_connection->send($synchronized_timestamp);
-            $server_connection->close();
+        my $synchronized_timestamp = sprintf("%.3f", time()+ $self->{time_offset});
+        if ($self->{connexion} && $self->{connexion}->connected()) {
+            $self->{connexion}->print($synchronized_timestamp);
         }
+        else {
+                warn "Connexion perdue, reconnexion en cours ...";
+                $self->connect_to_server();
+            }
         
         # Pause de 10 millisecondes (10 000 microsecondes)
+        # sleep(2);
         usleep($self->{sync_interval} * 1000);
     }
 }
-
+sub DESTROY {
+    my ($self) = @_;
+    $self->{connexion}->close() if $self->{connexion};
+}
 1;
 
 __END__

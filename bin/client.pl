@@ -8,26 +8,32 @@ use FindBin;
 use lib "$FindBin::Bin/../lib";
 use Timestamp::Client;
 use AppConfig;
+use SignalHandler;
 
 use Timestamp::OptionsHandler;
 
 sub main{
 
-# Récupère et valide les options
-my %opts = Timestamp::OptionsHandler::handle_options('client');
+  # Récupère et valide les options
+  my %opts = Timestamp::OptionsHandler::handle_options('client');
 
-# Création et démarrage du client
-my $client = Timestamp::Client->new(
-    host     => $opts{host}, 
-    port     => $opts{port}, 
-    interval => $opts{interval}
-);
+  # Création et démarrage du client
+  my $client = Timestamp::Client->new(
+      host     => $opts{host}, 
+      port     => $opts{port}, 
+      interval => $opts{interval}
+  );
 
-
-$client->run();
+  print "Client demarre avec PID : $$ sur $opts{host}:$opts{port}\n";
+  $client->run();
 }
-
+# Gestion de l'arrêt propre avec Ctrl+C 
+my $cleanup = sub {
+    kill 'TERM', $$;
+};
 main();
+setup_signal_handlers($cleanup);
+
 1;
 
 __END__

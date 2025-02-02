@@ -86,6 +86,18 @@ Le fichier `config/config.ini` permet de paramétrer :
 - Développement en cours
 - Contributions bienvenues
 
+## Améliorations Futures
+
+- **Envoi de plusieurs requêtes pour une meilleure estimation de l'offset** :
+  Afin d'améliorer la précision des timestamps collectés, il serait intéressant d'envoyer plusieurs requêtes par client et de calculer une moyenne ou une estimation plus robuste des temps de réponse. Cela permettrait de compenser les variations dues aux latences réseau ou à des instabilités temporaires, améliorant ainsi la synchronisation globale.
+
+- **Gestion dynamique des fichiers de log**
+  Le nom du fichier de log utilisé pour stocker les timestamps est actuellement statique. Une amélioration serait de permettre une gestion dynamique des fichiers de log, par exemple en générant des fichiers différents en fonction de la date ou d'autres paramètres (comme l'ID du serveur ou du client). Cela faciliterait la gestion et l'archivage des données collectées.
+
+- **Gestion des erreurs avec eval**
+
+Actuellement, le code utilise des die pour signaler des erreurs, ce qui provoque l'arrêt immédiat du programme. Une amélioration future consisterait à encapsuler ces die dans des blocs eval, permettant ainsi de capturer les erreurs sans arrêter brutalement le programme. Cela offrirait une gestion des erreurs plus souple et pourrait inclure des actions de récupération ou des messages d'erreur plus détaillés.
+
 ## Lien vers l'énoncé
 
 Vous pouvez consulter l'énoncé du projet [ici](docs/enonce_timestamp_collector.pdf).

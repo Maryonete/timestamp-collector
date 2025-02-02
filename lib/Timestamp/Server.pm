@@ -1,13 +1,10 @@
 package Timestamp::Server;
 use strict;
 use warnings;
-use Data::Dumper;
 use Time::HiRes qw(time);
 use IO::Socket::INET;
 use Timestamp::Util;
 use Timestamp::OptionsHandler;
-
-# TODO: Optimisation des performances : Utilisation de buffers et de gestion efficace des fichiers.
 
 sub new {
     my ($class, %options) = @_;
@@ -22,42 +19,60 @@ sub new {
         server_port => $options{port} || '7777',
         output_file => './datas/timestamps.log', # TODO mettre en config
         datas_file  => [], # données contenues dans le fichier
+        server_socket => undef,  # Socket serveur pour l'écoute
+        connexion     => undef,  # Connexion cliente active
     };
     bless $self, $class;
     return $self;
 }
 sub create_server_socket {
     my ($self) = @_;
-    return new IO::Socket::INET (
-        LocalHost => $self->{server_host},
-        LocalPort => $self->{server_port},
-        Proto     => 'tcp',
-        Listen    => 5,
-        Reuse     => 1
-    );
+
+    # Crée le socket serveur s'il n'existe pas
+    unless ($self->{server_socket}) {
+        $self->{server_socket} = IO::Socket::INET->new(
+            LocalHost => $self->{server_host},
+            LocalPort => $self->{server_port},
+            Proto     => 'tcp',
+            Listen    => 5,
+            Reuse     => 1
+        ) or die "Cannot create server socket: $!";
+    }
+
+    # Accepte une nouvelle connexion cliente
+    my $client_connection = $self->{server_socket}->accept();
+    
+    if ($client_connection) {
+        $self->{connexion} = $client_connection;
+        return $client_connection;
+    }
+    
+    return;
 }
 # Envoie le timestamp du serveur
 sub handle_time_sync {
-    my ($self, $client_connection) = @_;
+    my ($self) = @_;
     
     my $server_time = sprintf("%.3f", time());
-    $client_connection->send($server_time);
-   
+    $self->{connexion}->send($server_time . "\n");
+    $self->{connexion}->flush();
+
     return 1;
 }
 
 sub handle_client_connection {
-    my ($self, $server_socket) = @_;
-    my $client_connection = $server_socket->accept();
-   
-    if (!$client_connection) {
-        print "Erreur lors de l'acceptation de la connexion : $!\n";
+    my ($self) = @_;
+
+        # Premiere connexion : synchronisation du temps
+    my $client_message = '';
+    my $bytes_read = $self->{connexion}->recv($client_message, 1024);
+    
+    if (!defined $bytes_read) {
+        warn "Erreur de lecture : $!";
         return;
     }
-    # Premiere connexion : synchronisation du temps
-    my $client_message = <$client_connection>;
-    if ($client_message eq "SYNC\n") {
-        $self->handle_time_sync($client_connection);
+    if ($client_message eq "SYNC") {
+        $self->handle_time_sync();
         return;
     }
     return $client_message;
@@ -70,47 +85,56 @@ sub init_datas_file {
         or die "Impossible d'ouvrir le fichier [$self->{output_file}]: $!";
 
     # Lire et stocker les données dans le tableau
-    $self->{datas_file} = [ map { chomp; $_ } <$log_file> ];
+    $self->{datas_file} = [  <$log_file> ];
     close($log_file);
 }
 sub process_data {
     my ($self, $data) = @_;
-    
     # Vérification de l'absence de doublons
     unless(grep { $_ eq $data } @{$self->{datas_file}}) {
-        push(@{$self->{datas_file}}, $data);  # Ajouter le nouveau timestamp à la liste
-        # Trier et nettoyer les retours à la ligne
-        my @sorted_timestamps = sort map { chomp; $_ } @{$self->{datas_file}};
+        # Ajout du nouveau timestamp à la liste
+        push(@{$self->{datas_file}}, $data);  
         
-        # Ouvrir le fichier en écriture et y écrire les données triées
+        # Trie
+        my @sorted_timestamps = sort @{$self->{datas_file}};
+        
         open(my $log_file, '>', $self->{output_file}) 
             or die "Impossible d'ouvrir le fichier [$self->{output_file}]: $!";
+            
         print $log_file join("\n", @sorted_timestamps) . "\n";
         close($log_file);
     }
 }
 
-
-
 sub run {
     my ($self) = @_;
     $| = 1; # pas de bufferisation console
     
-    # Creating a listening socket
-    my $server_socket = $self->create_server_socket();
-    die "Cannot create socket $!\n" unless $server_socket;
-    
+    # # Creating a listening socket
+    $self->create_server_socket();
+    return unless $self->{connexion};
     $self->init_datas_file();
 
     while(1) {
-        my $message = $self->handle_client_connection($server_socket);
-        next unless $message;
-        next unless Timestamp::Util::validate_timestamp($message);
-        $self->process_data($message);
-        print "-";
+        if ($self->{connexion} && $self->{connexion}->connected()) {
+            my $message = $self->handle_client_connection();
+            # warn "Server Connexion en cours ... ";
+            next unless $message;
+            next unless Timestamp::Util::validate_timestamp($message);
+            $self->process_data($message);
+            print "-";
+        }
+        else {
+                warn "Connexion perdue, reconnexion en cours ...";
+                $self->create_server_socket();
+            }
+       
     }
 }
-
+sub DESTROY {
+    my ($self) = @_;
+    $self->{connexion}->close() if $self->{connexion};
+}
 1;
 
 __END__
@@ -129,11 +153,6 @@ Timestamp::Server - Serveur de gestion des connexions clients et de stockage des
 =head1 DESCRIPTION
 
 Le serveur Timestamp::Server recoit des connexions TCP des clients, synchronise leurs horloges et enregistre les timestamps recus dans un fichier. Les donnees sont triees et les doublons elimines avant l'enregistrement.
-
-=head1 EXAMPLE
-
-    my $server = Timestamp::Server->new( port => 7777 );
-    $server->run();
 
 =head1 OPTIONS
 

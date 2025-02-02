@@ -7,7 +7,9 @@ use Time::HiRes qw(sleep);
 use FindBin qw($RealBin);
 use lib 'lib';
 use AppConfig; 
+use SignalHandler;
 use Timestamp::OptionsHandler;
+
 
 # Récupère et valide les options
 my %opts = Timestamp::OptionsHandler::handle_options('launcher');
@@ -38,7 +40,6 @@ sub start_server {
             print "END SERVEUR";
         exit 0;
     }
-    print "Serveur demarre avec PID $pid_serveur (ecoute sur port: $port)\n";
     return $pid_serveur;
 }
 
@@ -59,19 +60,11 @@ sub start_clients {
         }
         push(@pid_clients, $pid_client);
     }
-    print "Clients demarres avec PIDs : " . join(", ", @pid_clients) . " sur $host:$port\n";
     return @pid_clients;
 }
 
-# Gestion de l'arrêt propre avec Ctrl+C 
-sub handle_termination {
-    my ($pid_serveur, @pid_clients) = @_;
-    $SIG{INT} = sub {
-        print "\nArret des processus...\n";
-        kill 'TERM', $pid_serveur, @pid_clients;
-        exit;
-    };
-}
+
+
 
 # Attente des processus enfants
 sub wait_for_children {
@@ -95,8 +88,19 @@ my $pid_serveur = start_server($opts{port});
 my @pid_clients = start_clients($opts{nb_clients},$opts{port}, $opts{host}, $opts{interval});
 
 
+# Gestion de l'arrêt propre avec Ctrl+C 
+my $cleanup = sub {
+    kill 'TERM', $pid_serveur, @pid_clients;
+};
+# Wait for the child processes to terminate
+wait_for_children();
+
+# Activer le gestionnaire avec le cleanup
+setup_signal_handlers($cleanup);
+
 # Handle termination signal (Ctrl+C)
 handle_termination($pid_serveur, @pid_clients);
 
-# Wait for the child processes to terminate
-wait_for_children();
+
+
+
