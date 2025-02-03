@@ -11,6 +11,9 @@ use AppConfig;
 
 sub handle_options {
     my ($script_type) = @_;
+
+    # TODO : mettre lien out
+    AppConfig::load_config("config/config.ini");
     
     # Récupère les options par défaut du fichier de configuration
     my %options = (

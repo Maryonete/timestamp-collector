@@ -1,21 +1,23 @@
 package AppConfig;
-
+use Data::Dumper;
 use strict;
 use warnings;
 
 our $config;
 
-BEGIN {
-    # Charge le fichier de configuration au demarrage
-    my $config_file = 'config/config.ini';
+# Charge le fichier de configuration
+sub load_config{
+    my($config_file) = @_;
+    
+    return die 'Erreur : Pas de fichier de configuration' unless $config_file;
+
     open(my $fh, '<', $config_file) 
             or die "Impossible de lire le fichier de configuration [$config_file]: $!";
 
     while( <$fh> ) {
         chomp;
-        $config->{$1} = $2 if /^(\w+) = (\w+)$/;
+        $config->{$1} = $2 if /^(\w+) *= *(\w+)$/;
     }
-
     close($fh);
 }
 
@@ -25,7 +27,7 @@ sub get {
     # Verifier si la cle existe dans la section
     die "Cle '$key' non trouvee"
         unless exists $config->{$key};
-    
+ 
     return $config->{$key};
 }
 
@@ -35,7 +37,8 @@ __END__
 
 =head1 NAME
 
-AppConfig - Gestionnaire de configuration pour charger et recuperer des parametres a partir d'un fichier INI
+AppConfig - Gestionnaire de configuration pour charger et recuperer des parametres a 
+partir d'un fichier INI
 
 =head1 SYNOPSIS
 

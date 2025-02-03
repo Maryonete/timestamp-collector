@@ -18,13 +18,14 @@ Ce projet implémente une communication client-serveur en Perl permettant la col
   - `IO::Socket::INET`
   - `Time::HiRes`
   - `Test::More`
+  - `Devel::Cover` (pour la couverture des tests)
 
 ### Installation des Dépendances
 
 Les modules Perl nécessaires peuvent être installés avec la commande suivante :
 
 ```bash
-cpan install IO::Socket::INET Time::HiRes Test::More
+cpan install IO::Socket::INET Time::HiRes Test::More Devel::Cover
 ```
 
 ## Utilisation
@@ -70,16 +71,27 @@ perl bin/launcher.pl --nb_clients=5 --port=8888 --interval=15
 Pour exécuter les tests unitaires :
 
 ```bash
-prove -l t/
+prove -l -r t/
 ```
+
+### Couverture des Tests
+
+Pour analyser la couverture des tests avec **Devel::Cover**, utilisez les commandes suivantes :
+
+```powershell
+$env:PERL5OPT = "-MDevel::Cover=-db,t/cover_db"
+prove -r t/
+$env:PERL5OPT = ""
+cover -report html t/cover_db
+```
+
+Le rapport HTML sera généré et accessible dans `t/cover_db/coverage.html`.
 
 ## Configuration
 
 Le fichier `config/config.ini` permet de personnaliser :
 
 - Les paramètres par défaut du serveur et des clients
-- Les chemins des fichiers de log
-- Les options de logging
 
 ## Développement
 

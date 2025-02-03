@@ -1,41 +1,6 @@
 # Dossiers de test et couverture
 t/cover_db/
-/cover_db/
-*.gcov
-.prove
 
-# Données générées
-datas/timestamps.log
-*.log
 
-# Fichiers générés par Perl/CPAN
-Makefile
-Makefile.old
-MANIFEST.bak
-/MYMETA.*
-/*.yml
-/*.json
-/pm_to_blib
-/blib/
-/inc/
 
-# Fichiers temporaires Perl
-*.bs
-*.o
-*.c
-*.obj
-*.pdb
 
-# Fichiers système
-.DS_Store
-Thumbs.db
-
-# VS Code
-.vscode/*
-!.vscode/settings.json
-!.vscode/tasks.json
-!.vscode/launch.json
-!.vscode/extensions.json
-!.vscode/*.code-snippets
-.history/
-*.code-workspace

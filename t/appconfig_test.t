@@ -1,35 +1,45 @@
 use strict;
 use warnings;
-use Test::More tests => 3;
+use Test::More tests => 5;
 use lib './lib';
+
+# Chargement du module
+require_ok('AppConfig');
+
+my $file_test = "t/datas/config.ini";
 
 # Fonctions utilitaires pour les tests
 sub setup_test_env {
-    mkdir 'config' unless -d 'config';
-    open my $fh, '>', 'config/config.ini' or die "Impossible de créer config.ini: $!";
+    open my $fh, '>', $file_test or die "Impossible de creer config.ini: $!";
     print $fh <<'END_CONFIG';
-[test]
-value=123
+value = 123
 name=marion
 END_CONFIG
     close $fh;
 }
 
 sub cleanup_test_env {
-    unlink 'config/config.ini';
-    rmdir 'config';
+    unlink $file_test;
 }
 
-# Mise en place de l'environnement de test
+# Environnement de test
 setup_test_env();
 
-# Chargement du module
-require_ok('AppConfig');
+AppConfig::load_config($file_test);
 
+subtest 'Le fichier de configuration n\'existe pas' => sub {
+    eval { AppConfig::load_config('invalid_file') };
+    like($@, qr/Impossible de lire le fichier de configuration/, 'Erreur fichier invalide');
+};
+subtest 'Le fichier de configuration absent' => sub {
+    eval { AppConfig::load_config() };
+    like($@, qr/Erreur : Pas de fichier de configuration/, 'AppConfig: Erreur fichier inexistant');
+};
 # Test des valeurs valides
 subtest 'Lecture des valeurs valides' => sub {
-    my $value = eval { AppConfig::get('value') };
-    is($value, '123', 'Lecture de value') or diag($@);
+    AppConfig::load_config($file_test);
+    my $value = AppConfig::get('value') ;
+    is($value, '123', 'Lecture de value') ;
 
     my $name = eval { AppConfig::get('name') };
     is($name, 'marion', 'Lecture de name') or diag($@);
@@ -37,11 +47,9 @@ subtest 'Lecture des valeurs valides' => sub {
 
 # Test des erreurs
 subtest 'Gestion des erreurs' => sub {
-    eval { AppConfig::get('invalid', 'key') };
-    like($@, qr/Section 'invalid' non trouvee/, 'Erreur section invalide');
-
+    
     eval { AppConfig::get('invalid') };
-    like($@, qr/Cle 'invalid' non trouvee/, 'Erreur clé invalide');
+    like($@, qr/Cle 'invalid' non trouvee/, 'Erreur cle invalide');
 };
 
 # Nettoyage
@@ -59,9 +67,11 @@ Tests pour AppConfig
 
 =item * Vérification du chargement du module C<AppConfig>.
 
+=item * Vérification du chargement fichier de test de configuration.
+
 =item * Lecture de valeurs valides depuis le fichier de configuration.
 
-=item * Vérification de la gestion des erreurs pour les sections et clés inexistantes.
+=item * Vérification de la gestion des erreurs pour clés inexistantes et fichier de configuration absent ou inexistant.
 
 =back
 
@@ -69,11 +79,9 @@ Tests pour AppConfig
 
 =over 4
 
-=item * C<setup_test_env()> : crée un fichier de configuration test C<config/config.ini>.
+=item * C<setup_test_env()> : crée un fichier de configuration test C<t/datas/config.ini>.
 
 =item * C<cleanup_test_env()> : supprime le fichier de test après exécution.
-
-=item * Vérification des valeurs attendues dans la section [test] du fichier.
 
 =item * Test de gestion d'erreurs pour une section ou clé inexistante.
 
