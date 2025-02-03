@@ -2,12 +2,12 @@
 
 ## Bugs à corriger
 
-- [ ] Vérifier la connexion au serveur avant chaque envoi client
 - [ ] Revoir la gestion des signaux SIGINT et SIGNTERM
-- [ ] Mettre le lien vers config/config.json dans variable de config (voir Timestamp::OptionsHandler)
 
 ## À améliorer
 
+- [ ] Vérifier la connexion au serveur avant chaque envoi client
+- [ ] Mettre le lien vers config/config.json dans variable de config (voir Timestamp::OptionsHandler)
 - [ ] Traduire Perldoc et commentaires en anglis
 - [ ] Remplacer IO::Socket::INET par IO::Socket::SSL
 - [ ] Meilleure estimation de l'offset (moyenne sur plusieurs requêtes)
