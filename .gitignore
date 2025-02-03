@@ -1,0 +1,7 @@
+# Dossiers de test et couverture
+t/cover_db/
+t/datas/
+
+# Ignore le fichier timestamps.log
+datas/timestamps.log
+
