@@ -1,32 +1,34 @@
 package Timestamp::Client;
 use strict;
 use warnings;
+
 use Time::HiRes qw(time usleep);
 use IO::Socket::INET;
-use Timestamp::Util;
-use Timestamp::OptionsHandler;
+
+use Timestamp::Util ();
+use Timestamp::OptionsHandler ();
 
 sub new {
     my ($class, %options) = @_;
+    my $self = {};
+    bless $self, $class;
 
     # Si aucune option n'est passée, utilise le gestionnaire d'options
     unless (%options) {
         %options = Timestamp::OptionsHandler::handle_options('client');
     }
-
-    my $self = {
-        server_host     => $options{host} || 'localhost',
-        server_port     => $options{port} || '7777',
-        time_offset     => 0,  # Stocke l'offset de temps
-        sync_interval   => $options{interval} || 10,  # Intervalle en millisecondes
-        connexion      => undef,  # Stocke la connexion persistante
-    };
-    bless $self, $class;
+    # ajout options a l'objet
+    $self->{server_host}     = $options{host} || 'localhost';
+    $self->{server_port}     = $options{port} || '7777';
+    $self->{time_offset}     = 0;  # Stocke l'offset de temps
+    $self->{sync_interval}   = $options{interval} || 10;  # Intervalle en millisecondes
+    $self->{connexion}       = undef;  # Stocke la connexion persistante
+    
     return $self;
 }
 
 sub connect_to_server {
-    my ($self) = @_;
+    my $self = shift;
 
     # la connexion existe déjà
     return $self->{connexion} if $self->{connexion} && $self->{connexion}->connected();
@@ -41,7 +43,7 @@ sub connect_to_server {
 }
 
 sub calculate_time_offset {
-    my ($self) = @_;
+    my $self = shift;
 
     $self->connect_to_server();
     return unless $self->{connexion};
@@ -57,7 +59,7 @@ sub calculate_time_offset {
     my $bytes_read = $self->{connexion}->recv($server_timestamp, 1024);
     chomp($server_timestamp);
 
-    # Timestamp du serveur invalide
+    # Timestamp du serveur invalide: simple alerte , offset definit à 0
     if (!$server_timestamp || !Timestamp::Util::validate_timestamp($server_timestamp)) {
         $self->{time_offset} = 0;
         warn "Timestamp du serveur invalide : [$server_timestamp]";
@@ -69,26 +71,23 @@ sub calculate_time_offset {
 }
 
 sub run {
-    my ($self) = @_;
+    my $self = shift;
+
     $self->calculate_time_offset();
     
     while (1) {
         my $synchronized_timestamp = sprintf("%.3f", time()+ $self->{time_offset});
+
         if ($self->{connexion} && $self->{connexion}->connected()) {
             $self->{connexion}->print($synchronized_timestamp);
         }
-        else {
-                warn "Connexion perdue, reconnexion en cours ...";
-                $self->connect_to_server();
-            }
-        
         # Pause de 10 millisecondes (10 000 microsecondes)
         # sleep(2);
         usleep($self->{sync_interval} * 1000);
     }
 }
 sub DESTROY {
-    my ($self) = @_;
+    my $self = shift;
     $self->{connexion}->close() if $self->{connexion};
 }
 1;
@@ -109,11 +108,6 @@ Timestamp::Client - Client pour envoyer des timestamps synchronises a un serveur
 =head1 DESCRIPTION
 
 Le client Timestamp::Client etablit une connexion TCP avec un serveur, calcule l'offset temporel entre son horloge locale et celle du serveur, puis envoie en continu des timestamps synchronises. Les timestamps sont envoyes toutes les 10 millisecondes (configurable).
-
-=head1 EXAMPLE
-
-    my $client = Timestamp::Client->new( host => 'localhost', port => 7777, interval => 10 );
-    $client->run();
 
 =head1 OPTIONS
 

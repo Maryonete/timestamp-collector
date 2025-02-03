@@ -2,9 +2,7 @@ package SignalHandler;
 
 use strict;
 use warnings;
-use Exporter 'import';
 
-our @EXPORT = qw(setup_signal_handlers);
 
 sub setup_signal_handlers {
     my ($cleanup) = @_;

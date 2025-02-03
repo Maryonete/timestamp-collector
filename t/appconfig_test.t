@@ -1,19 +1,20 @@
 use strict;
 use warnings;
 use Test::More tests => 5;
-use lib './lib';
 
 # Chargement du module
 require_ok('AppConfig');
 
-my $file_test = "t/datas/config.ini";
+my $file_test = "t/datas/config.json";
 
 # Fonctions utilitaires pour les tests
 sub setup_test_env {
-    open my $fh, '>', $file_test or die "Impossible de creer config.ini: $!";
+    open my $fh, '>', $file_test or die "Impossible de creer config.json: $!";
     print $fh <<'END_CONFIG';
-value = 123
-name=marion
+{
+  "value": 123,
+  "name": "marion"
+}
 END_CONFIG
     close $fh;
 }

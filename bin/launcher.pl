@@ -1,16 +1,13 @@
 #!/usr/bin/perl
 use strict;
 use warnings;
-use Getopt::Long;
+
 use POSIX ":sys_wait_h";
-use Time::HiRes qw(sleep);
+
 use FindBin qw($RealBin);
 use lib 'lib';
-use SignalHandler;
-use Timestamp::OptionsHandler;
 
-
-
+use Timestamp::OptionsHandler ();
 
 # Serveur
 sub start_server {
@@ -39,11 +36,7 @@ sub start_clients {
         my $pid_client = fork();
         
         if ($pid_client == 0) {
-            # Gestionnaire de signal pour le client
-            $SIG{TERM} = sub {
-                print "Client $$ terminé\n";
-                exit 0;
-            };
+            
             # Démarrage du client via le script
             system("perl $client_script --host=$options->{host} --port=$options->{port} --interval=$options->{interval}") 
                 or die "Client connexion terminee\n";
@@ -64,19 +57,6 @@ sub display_config {
     print "- Intervalle: $options->{interval} ms\n";
     print '_' x 50 . "\n";
 }
-# Gestion de l'arrêt propre avec Ctrl+C 
-sub cleanup {
-    print "\nArrêt des processus...\n";
-    
-    # Terminer tous les processus du groupe
-    kill 'TERM', -$$;  # Envoie TERM à tout le groupe de processus
-    
-    # Attendre la fin de tous les processus
-    while (waitpid(-1, 0) > 0) {}
-    
-    print "Tous les processus sont arrêtés\n";
-};
-
 sub main{
 
     # Récupère et valide les options
@@ -95,11 +75,9 @@ sub main{
     }
 
     display_config(\%options);
-    # setup_signal_handlers(\&cleanup);
+
     my $pid_serveur = start_server($server_script, \%options)  ;
     my @pid_clients = start_clients($client_script , \%options);
-    # Active le gestionnaire avec le cleanup : signal (Ctrl+C)
-
 }
 
 main();
@@ -114,14 +92,11 @@ launcher.pl - Lance un serveur d'écoute des timestamps et n clients
 
 =head1 SYNOPSIS
 
-  use Timestamp::Server;
-  use Timestamp::Client;
-
   perl launcher.pl
 
 =head1 DESCRIPTION
 
-Ce script lance un serveur et n clients 
+Ce script lance un serveur et n clients.
 Les options sont validées avant de démarrer le serveur et le clients.
 
 =head1 OPTIONS

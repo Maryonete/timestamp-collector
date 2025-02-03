@@ -1,0 +1,6 @@
+{
+  "nb_clients": 2,
+  "host": "localhost",
+  "port": 7777,
+  "interval": 10
+}

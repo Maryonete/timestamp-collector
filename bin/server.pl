@@ -3,19 +3,17 @@
 use strict;
 use warnings;
 
-use FindBin;
-use lib "$FindBin::Bin/../lib", 'lib';
-use Getopt::Long;
-
-use SignalHandler;
+use FindBin qw($RealBin);
+use lib 'lib';
+use SignalHandler ();
+use Timestamp::OptionsHandler ();
 use Timestamp::Server;
-use Timestamp::OptionsHandler;
 
 
 # Fonction principale
 sub main {
     
-    setup_signal_handlers(\&cleanup);
+    SignalHandler::setup_signal_handlers(\&cleanup);
 
     # Récupère et valide les options
     my %opts = Timestamp::OptionsHandler::handle_options('server');
@@ -36,8 +34,6 @@ sub cleanup {
 
 main();
 
-
-1;
 
 =pod
 =head1 NAME

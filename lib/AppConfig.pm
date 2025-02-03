@@ -2,6 +2,7 @@ package AppConfig;
 use Data::Dumper;
 use strict;
 use warnings;
+use JSON qw(decode_json);
 
 our $config;
 
@@ -14,11 +15,11 @@ sub load_config{
     open(my $fh, '<', $config_file) 
             or die "Impossible de lire le fichier de configuration [$config_file]: $!";
 
-    while( <$fh> ) {
-        chomp;
-        $config->{$1} = $2 if /^(\w+) *= *(\w+)$/;
-    }
-    close($fh);
+    my $json_text = do { local $/; <$fh> };
+    close $fh;
+
+    # Décoder le JSON
+    $config = decode_json($json_text);
 }
 
 sub get {

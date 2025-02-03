@@ -3,16 +3,14 @@
 use strict;
 use warnings;
 
-use Getopt::Long;
-use FindBin;
-use lib "$FindBin::Bin/../lib";
+use FindBin qw($RealBin);
+use lib 'lib';
+use SignalHandler ();
+use Timestamp::OptionsHandler ();
 use Timestamp::Client;
-use SignalHandler;
-
-use Timestamp::OptionsHandler;
 
 sub main{
-  setup_signal_handlers(\&cleanup);
+  SignalHandler::setup_signal_handlers(\&cleanup);
 
   # Récupère et valide les options
   my %opts = Timestamp::OptionsHandler::handle_options('client');
@@ -23,7 +21,6 @@ sub main{
       port     => $opts{port}, 
       interval => $opts{interval}
   );
-
   print "Client demarre avec PID : $$ sur $opts{host}:$opts{port}\n";
   $client->run();
 }
@@ -36,13 +33,11 @@ sub cleanup  {
 
 main();
 
-1;
-
 __END__
 
 =head1 NAME
 
-client.pl - script principal pour creer un client
+client.pl - script principal pour creer et demarrer un client
 
 =head1 SYNOPSIS
 
@@ -60,7 +55,7 @@ Specifie l'interval de temps en ms entre chaque envoie de donnee du client au se
 
 =item B<--port>
 
-Port sur lequel le serveur ecoute le client
+Port sur lequel le client se connecte chez le serveur
 
 =item B<--host>
 

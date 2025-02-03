@@ -6,32 +6,28 @@ use IO::Socket::INET;
 use Timestamp::Util;
 use Timestamp::OptionsHandler;
 
-
-
 sub new {
     my ($class, %options) = @_;
+    my $self  = {};
+    bless $self, $class;
 
      # Si aucune option n'est passée, utilise le gestionnaire d'options
     unless (%options) {
         %options = Timestamp::OptionsHandler::handle_options('server');
     }
 
-    my $self = {
-        server_host => '0.0.0.0',
-        server_port => $options{port} || '7777',
-        output_file => './datas/timestamps.log', # TODO mettre en config
-        datas_file  => [], # données contenues dans le fichier
-        server_socket => undef,  # Socket serveur pour l'écoute
-        connexion     => undef,  # Connexion cliente active
-    };
-    bless $self, $class;
+    $self->{server_host} = '0.0.0.0';
+    $self->{server_port} = $options{port} || '7777';
+    $self->{output_file} = './datas/timestamps.log'; # TODO mettre en config
+    $self->{datas_file} = []; # données contenues dans le fichier
+    $self->{server_socket} = undef;  # Socket serveur pour l'écoute
+    $self->{connexion} = undef;  # Connexion cliente active
+    
     return $self;
 }
 
-
-
 sub create_server_socket {
-    my ($self) = @_;
+    my $self = shift;
 
     # Crée le socket serveur s'il n'existe pas
     unless ($self->{server_socket}) {
@@ -47,33 +43,29 @@ sub create_server_socket {
     # Accepte une nouvelle connexion cliente
     my $client_connection = $self->{server_socket}->accept();
     
-    if ($client_connection) {
-        $self->{connexion} = $client_connection;
-        return $client_connection;
-    }
-    
-    return;
+    return if !$client_connection;
+
+    $self->{connexion} = $client_connection;
+    return $client_connection;
 }
+
 # Envoie le timestamp du serveur
 sub handle_time_sync {
-    my ($self) = @_;
+    my $self = shift;
     
     my $server_time = sprintf("%.3f", time());
     $self->{connexion}->send($server_time . "\n");
-    $self->{connexion}->flush();
-
-    return 1;
 }
 
 sub handle_client_connection {
-    my ($self) = @_;
+    my $self = shift;
 
     # Premiere connexion : synchronisation du temps
     my $client_message = '';
     my $bytes_read = $self->{connexion}->recv($client_message, 1024);
     
     if (!defined $bytes_read) {
-        die "Erreur de lecture : $!";
+        die "Erreur de recption donnees du Client : $!";
         return;
     }
     if ($client_message eq "SYNC") {
@@ -82,8 +74,9 @@ sub handle_client_connection {
     }
     return $client_message;
 }
+
 sub init_datas_file {
-    my ($self) = @_;
+    my $self = shift;
 
     # Vérifier si le fichier existe, sinon le créer
     unless (-e $self->{output_file}) {
@@ -97,7 +90,6 @@ sub init_datas_file {
         or die "Impossible d'ouvrir le fichier [$self->{output_file}]: $!";
 
     # Lire et nettoyer les données
-    $self->{datas_file} = [];
     while (my $line = <$log_file>) {
         chomp $line;
         next unless $line =~ /\S/;  # Ignore les lignes vides
@@ -105,6 +97,7 @@ sub init_datas_file {
     }
     close($log_file);
 }
+
 sub process_data {
     my ($self, $data) = @_;
     # Vérification de l'absence de doublons
@@ -124,7 +117,8 @@ sub process_data {
 }
 
 sub run {
-    my ($self) = @_;
+    my $self = shift;
+
     $| = 1; # pas de bufferisation console
     
     # # Creating a listening socket
@@ -141,14 +135,13 @@ sub run {
             print "-";
         }
         else {
-                warn "Connexion perdue, reconnexion en cours ...";
-                $self->create_server_socket();
-            }
-       
+            warn "Connexion perdue, reconnexion en cours ...";
+            $self->create_server_socket();
+        }
     }
 }
 sub DESTROY {
-    my ($self) = @_;
+    my $self = shift;
     $self->{connexion}->close() if $self->{connexion};
 }
 1;

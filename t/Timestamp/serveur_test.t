@@ -3,9 +3,7 @@ use warnings;
 use Test::More  tests => 5;
 use Test::Exception;
 use IO::Socket::INET;
-use FindBin;
-use lib "$FindBin::Bin/../../lib";
-use FindBin qw($RealBin);
+
 
 BEGIN { use_ok('Timestamp::Client') }
 BEGIN { use_ok('Timestamp::Server') }
