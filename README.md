@@ -2,7 +2,7 @@
 
 ## Présentation
 
-Ce projet implémente une communication client-serveur en Perl permettant la collecte et la synchronisation de timestamps entre plusieurs clients et un serveur central.
+Ce projet met en place une architecture client-serveur en Perl utilisant le protocole TCP. Les clients envoient des timestamps à un serveur central, qui les collecte, les ordonne et les enregistre dans un fichier, en s'assurant qu'un même timestamp n'est présent qu'une seule fois.
 
 ## Fonctionnalités Principales
 
@@ -69,7 +69,7 @@ perl bin/launcher.pl --nb_clients=5 --port=8888 --interval=15
 
 ## Configuration
 
-Le fichier `config/config.ini` permet de personnaliser :
+Le fichier `config/config.json` permet de personnaliser :
 
 - Les paramètres par défaut du serveur et des clients
 

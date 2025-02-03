@@ -1,4 +1,5 @@
 package Timestamp::Server;
+
 use strict;
 use warnings;
 use Time::HiRes qw(time);
@@ -81,7 +82,7 @@ sub init_datas_file {
     # Vérifier si le fichier existe, sinon le créer
     unless (-e $self->{output_file}) {
         open(my $fh, '>', $self->{output_file}) 
-            or die "Impossible de créer le fichier [$self->{output_file}]: $!";
+            or die "Impossible de creer le fichier [$self->{output_file}]: $!";
         close($fh);
     }
 

@@ -1,6 +1,6 @@
 use strict;
 use warnings;
-use Test::More  tests => 5;
+use Test::More;
 use Test::Exception;
 use IO::Socket::INET;
 
@@ -35,28 +35,28 @@ subtest 'Erreur sur chemin fichier log timestamp' => sub {
     ok(!$process_data_fail, "Impossible d'ouvrir le fichier");
 };
 
-# subtest 'Test de la gestion des donnees dans le fichier' => sub {
-#     my $server = Timestamp::Server->new();
-#     my $server_socket = $server->create_server_socket();
+#  sub init_datas_file {
+#     my $self = shift;
 
-#     isa_ok($server_socket, 'IO::Socket::INET', 'Objet server_socket cree avec succes');
+#     # Vérifier si le fichier existe, sinon le créer
+#     unless (-e $self->{output_file}) {
+#         open(my $fh, '>', $self->{output_file}) 
+#             or die "Impossible de créer le fichier [$self->{output_file}]: $!";
+#         close($fh);
+#     }
 
-#     my $test_client = create_test_client();
-    
-#     $test_client->send("Test data") if $test_client;
-#     my $client_connection = $server_socket->accept();
+#     # Ouvrir en lecture pour charger les données dans la mémoire
+#     open(my $log_file, '<', $self->{output_file}) 
+#         or die "Impossible d'ouvrir le fichier [$self->{output_file}]: $!";
 
-#     $server->{output_file} = "$RealBin/datas/timestamps.log";
-    
-#     my $test_data = "donnees de test";
-#     $server->process_data($test_data);
-
-#     open(my $log_file, "<$server->{output_file}") or die "open: $!";
-#     chomp(my $file_content = <$log_file>);
-#     is($file_content, $test_data, "Fichier de log renseigne correctement");
-    
-#     $test_client->close() if $test_client;
-# };
+#     # Lire et nettoyer les données
+#     while (my $line = <$log_file>) {
+#         chomp $line;
+#         next unless $line =~ /\S/;  # Ignore les lignes vides
+#         push @{$self->{datas_file}}, $line;
+#     }
+#     close($log_file);
+# }
 
 # subtest 'teste handle_client_connection' => sub {
 #     my $server = Timestamp::Server->new();
