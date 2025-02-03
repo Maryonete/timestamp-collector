@@ -4,7 +4,6 @@ use Test::More  tests => 5;
 use Test::Exception;
 use IO::Socket::INET;
 
-
 BEGIN { use_ok('Timestamp::Client') }
 BEGIN { use_ok('Timestamp::Server') }
 
@@ -83,33 +82,3 @@ subtest 'Erreur sur chemin fichier log timestamp' => sub {
 
 done_testing();
 
-=head1 NOM
-
-serveur_test.t - Tests unitaires pour le module Timestamp::Server
-
-=head1 DESCRIPTION
-
-Ce fichier teste les principales fonctionnalités du serveur, 
-incluant la création de l'objet, la gestion des connexions et l'écriture des données.
-
-=head1 TESTS
-
-=over 4
-
-=item * Chargement des modules Timestamp::Client et Timestamp::Server
-
-=item * Création de l'objet serveur avec ou sans options
-
-=item * Vérification des paramètres par défaut (host, port, fichier log)
-
-=item * Gestion des erreurs lors de l'ouverture du fichier log
-
-=item * Vérification de l'écriture correcte des données dans le fichier log
-
-=item * Gestion d'une connexion client et traitement des messages
-
-=item * Synchronisation du temps avec le client
-
-=back
-
-=cut

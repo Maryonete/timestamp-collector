@@ -39,7 +39,7 @@ __END__
 =head1 NAME
 
 AppConfig - Gestionnaire de configuration pour charger et recuperer des parametres a 
-partir d'un fichier INI
+partir d'un fichier json
 
 =head1 SYNOPSIS
 
@@ -67,11 +67,5 @@ Recupere la valeur associee a la cle specifiee donnee du fichier de configuratio
 
 =back
 
-=head1 CONFIGURATION
-
-Le fichier de configuration est un fichier INI situe dans le repertoire 'config' sous le nom 'config.ini'. Il doit suivre la structure suivante :
-
-    [section_name]
-    key_name = value
 
 =cut

@@ -58,29 +58,3 @@ subtest 'Verifier si la connexion echoue' => sub {
 };
 
 done_testing();
-
-=head1 NOM
-
-t_client.t - Tests unitaires pour Timestamp::Client
-
-=head1 DESCRIPTION
-
-Ce fichier teste les fonctionnalités principales du module Timestamp::Client, notamment la création de l'objet client, la connexion au serveur et la gestion des erreurs.
-
-=head1 TESTS
-
-=over 4
-
-=item * Vérification de l'importation des modules Timestamp::Client et Timestamp::Server.
-
-=item * Création d'un client avec et sans options personnalisées.
-
-=item * Vérification de la connexion du client à un serveur de test.
-
-=item * Simulation d'une connexion erronée avec un hôte ou un port invalide.
-
-=item * Vérification que la connexion échoue bien lorsque le serveur est inaccessible.
-
-=back
-
-=cut

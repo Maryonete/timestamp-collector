@@ -58,34 +58,3 @@ cleanup_test_env();
 
 done_testing();
 
-=head1 NOM
-
-Tests pour AppConfig
-
-=head1 TESTS
-
-=over 4
-
-=item * Vérification du chargement du module C<AppConfig>.
-
-=item * Vérification du chargement fichier de test de configuration.
-
-=item * Lecture de valeurs valides depuis le fichier de configuration.
-
-=item * Vérification de la gestion des erreurs pour clés inexistantes et fichier de configuration absent ou inexistant.
-
-=back
-
-=head1 FONCTIONNEMENT
-
-=over 4
-
-=item * C<setup_test_env()> : crée un fichier de configuration test C<t/datas/config.ini>.
-
-=item * C<cleanup_test_env()> : supprime le fichier de test après exécution.
-
-=item * Test de gestion d'erreurs pour une section ou clé inexistante.
-
-=back
-
-=cut
